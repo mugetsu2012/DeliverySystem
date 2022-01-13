@@ -1,0 +1,195 @@
+﻿@using SistemaEncomiendas.Core.Models
+@model SistemaEncomiendas.Models.ListaUsuariosVm
+@{
+    ViewData["Title"] = "Usuarios";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card ">
+                <div class="card-header card-header-rose card-header-icon">
+                    <div class="card-icon">
+                        <i class="material-icons">search</i>
+                    </div>
+                    <h4 class="card-title">Búsqueda</h4>
+                </div>
+                <div class="card-body ">
+                    <form method="get" id="frmBuscarUsuarios" asp-controller="Administracion" asp-action="Usuarios" class="form-horizontal">
+                        <div class="row">
+                            <label class="col-sm-2 col-form-label">Nombre de usuario</label>
+                            <div class="col-sm-10">
+                                <div class="form-group">
+                                    <input type="text" asp-for="Nombre" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <label class="col-sm-2 col-form-label">Tipo de usuario</label>
+                            <div class="col-lg-5 col-md-6 col-sm-3">
+                                <select asp-for="TipoUsuario" asp-items="Html.GetEnumSelectList<TipoUsuario>()" class="selectpicker" data-style="btn btn-primary btn-round" title="Single Select">
+                                    <option selected>TODOS</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <label class="col-sm-2 col-form-label label-checkbox">Incluir inactivos</label>
+                            <div class="col-sm-10 checkbox-radios">
+                                <div class="form-check form-check-inline">
+                                    <label class="form-check-label">
+                                        <input class="form-check-input" asp-for="IncluirInactivos" type="checkbox"> Si
+                                        <span class="form-check-sign">
+                                            <span class="check"></span>
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer ">
+                    <div class="row">
+                        <div class="col-md-9">
+                            <button type="submit" class="btn btn-fill btn-rose" id="btnBuscarUsuarios">Buscar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header card-header-rose card-header-icon">
+                    <div class="card-icon">
+                        <i class="material-icons">people</i>
+                    </div>
+                    <h4 class="card-title">Usuarios</h4>
+                </div>
+                <div class="card-body">
+                    <button class="btn btn-primary btn-round" onclick="location.href = '@Url.Action("CrearEditarUsuario","Administracion")'">
+                        <i class="material-icons">add</i> Nuevo usuario
+                    </button>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th>Usuario</th>
+                                <th>Nombre completo</th>
+                                <th>Tipo</th>
+                                <th>Estado</th>
+                                <th>Fecha de ingreso</th>
+                                <th class="text-right">Acciones</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+
+                            @foreach (var usuario in Model.Usuarios)
+                            {
+                                <tr>
+                                    <td>@usuario.NombreUsuario</td>
+                                    <td>@usuario.ImprimirNombreCompleto()</td>
+                                    <td>@usuario.TipoUsuario.ToString()</td>
+                                    <td>
+                                        @if (usuario.Activo)
+                                        {
+                                            @:Activo
+                                        }
+                                        else
+                                        {
+                                            @:Inactivo
+                                        }
+                                    </td>
+                                    <td>@usuario.FechaIngreso.ToShortDateString()</td>
+                                    <td class="td-actions text-right">
+
+                                        <button type="button" rel="tooltip" title="Editar" class="btn btn-success btnEditarUsuario" data-url="@Url.Action("CrearEditarUsuario", "Administracion", new {usuario = usuario.NombreUsuario})">
+                                            <i class="material-icons">edit</i>
+                                        </button>
+                                        @if (usuario.Activo)
+                                        {
+                                            <button type="button" rel="tooltip" title="Desactivar" class="btn btn-danger btnAccionEstadoUsuario" data-usuario="@usuario.NombreUsuario">
+                                                <i class="material-icons">close</i>
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <button type="button" rel="tooltip" title="Activar" class="btn btn-info btnAccionEstadoUsuario" data-usuario="@usuario.NombreUsuario">
+                                                <i class="material-icons">person</i>
+                                            </button>
+                                        }
+
+                                    </td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<input type="hidden" id="urlToggleUser" value="@Url.Action("ToggleEstadoUsuario","Administracion")"/>
+
+@section scripts
+{
+    <script>
+        $(document).ready(function () {
+            $("#btnBuscarUsuarios").on('click', function(e) {
+                e.preventDefault();
+                $(this).prop('disable', true);
+                $("#frmBuscarUsuarios").submit();
+            });
+
+            $(".btnEditarUsuario").on('click', function(e) {
+                e.preventDefault();
+
+                var url = $(this).data('url');
+
+                location.href = url;
+
+            });
+
+            $('.btnAccionEstadoUsuario').on('click', function(e) {
+                e.preventDefault();
+
+                var usuario = $(this).data('usuario');
+
+                var url = $("#urlToggleUser").val();
+
+                $.ajax({
+                    type: 'POST',
+                    data: { usuario: usuario },
+                    url: url,
+                    success: function(data) {
+                        swal({
+                            title: 'Éxito!',
+                            buttonsStyling: false,
+                            confirmButtonClass: "btn btn-success",
+                            type: "success",
+                            text: "El estado se ha modificado correctamente"
+                        }).then(function() {
+                            location.reload();
+                        }).catch(swal.noop);
+                    },
+                    error: function(e) {
+                        console.log(e);
+                        swal({
+                            title: "Uh Oh!",
+                            text:
+                                "Al parecer ocurrió un error, intenta recargando la página, si el problema persiste, consulta al administrador",
+                            buttonsStyling: false,
+                            confirmButtonClass: "btn btn-danger",
+                            type: "error"
+                        }).catch(swal.noop);
+                    }
+                })
+            })
+
+        });
+    </script>
+}

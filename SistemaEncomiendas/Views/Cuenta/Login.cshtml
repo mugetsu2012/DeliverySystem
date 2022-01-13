@@ -1,0 +1,124 @@
+﻿@model LoginVm
+
+@{
+    ViewData["Title"] = "Login";
+    Layout = "_LayoutLogin";
+}
+
+<div class="offset-md-4 col-md-4 col-sm-4">
+    <form class="form" asp-controller="Cuenta" asp-action="ValidarLogin" id="frmLogin">
+        <div class="card card-login card-hidden">
+            <div class="card-header card-header-rose text-center">
+                <h4 class="card-title">Login</h4>
+                
+            </div>
+            <div class="card-body ">
+                <span class="bmd-form-group">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">
+                                <i class="material-icons">face</i>
+                            </span>
+                        </div>
+                        <input asp-for="Usuario" type="text" class="form-control" placeholder="Usuario...">
+                    </div>
+                </span>
+                <span class="bmd-form-group">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">
+                                <i class="material-icons">lock_outline</i>
+                            </span>
+                        </div>
+                        <input asp-for="Password" type="password" class="form-control" placeholder="Contraseña...">
+                    </div>
+                </span>
+            </div>
+            <div class="card-footer justify-content-center">
+                <a href="#" id="btnLogin" class="btn btn-rose btn-link btn-lg">Ingresar</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div style="visibility: hidden">
+    <ul id="listaErrores"></ul>
+</div>
+
+@section scripts
+{
+    <script>
+        $(document).ready(function() {
+
+            $('#btnLogin').on('click', function (e) {
+
+                e.preventDefault();
+
+                var $form = $("#frmLogin");
+
+                var data = $form.serialize();
+
+                var url = $form.attr('action');
+
+                $.ajax({
+                    type: 'POST',
+                    data: data,
+                    url: url,
+                    success: function (data) {
+                        if (data.exito) {
+                            //Validamos si sus credenciales son validas
+                            if (data.loginValido) {
+                                location.href = data.urlNew;
+                            } else {
+                                //Entra aca porque las credenciales son invalidas
+                                swal({
+                                    title: 'Oops!',
+                                    buttonsStyling: false,
+                                    confirmButtonClass: "btn btn-danger",
+                                    type: "error",
+                                    text: "Los datos que ha ingresado no son validos, revisa de nuevo"
+                                }).catch(swal.noop);
+                            }
+                        } else {
+
+                            //Leemos la lista de errores
+                            var $listaErrores = $("#listaErrores");
+
+                            $.each(data.errores,
+                                function (index, value) {
+                                    $listaErrores.append('<li>' + value + '</li>');
+                                });
+
+                            var htmlError = $listaErrores.html();
+
+                            swal({
+                                title: 'Espera',
+                                type: 'warning',
+                                buttonsStyling: false,
+                                confirmButtonClass: "btn btn-success",
+                                html: 'Revisa los siguientes errores: <br />' +
+                                    htmlError
+                            }).catch(swal.noop);
+
+                            //Limpiamos los errores
+                            $listaErrores.html('');
+                        }
+
+                    },
+                    error: function (e) {
+                        console.log(e);
+                        swal({
+                            title: "Uh Oh!",
+                            text:
+                                "Al parecer ocurrió un error, intenta recargando la página, si el problema persiste, consulta al administrador",
+                            buttonsStyling: false,
+                            confirmButtonClass: "btn btn-danger",
+                            type: "error"
+                        }).catch(swal.noop);
+                    }
+                });
+            });
+            
+        });
+    </script>
+}

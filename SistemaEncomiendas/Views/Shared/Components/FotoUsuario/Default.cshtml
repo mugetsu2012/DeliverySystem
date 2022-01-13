@@ -1,0 +1,16 @@
+﻿
+@{
+    Layout = null;
+}
+
+<div class="photo">
+    @if (User.IsInRole("Admin"))
+    {
+        <img src="@Url.Content("~/img/abel.jpg")" />
+    }
+    else
+    {
+        <img src="@Url.Content("~/img/default-avatar.png")" />
+    }
+
+</div>

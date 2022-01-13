@@ -1,0 +1,152 @@
+﻿@model EstadisticasVm
+@{
+    ViewData["Title"] = "Estadisticas";
+}
+
+<div class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-3 col-md-6 col-sm-6">
+                <div class="card card-stats">
+                    <div class="card-header card-header-warning card-header-icon">
+                        <div class="card-icon">
+                            <i class="material-icons">alarm</i>
+                        </div>
+                        <p class="card-category">Paquetes pendientes</p>
+                        <h3 class="card-title">@Model.PaquetesPendientes</h3>
+                    </div>
+                    <div class="card-footer">
+                        <div class="stats">
+                            @*<i class="material-icons text-danger">warning</i>
+                            <a href="#pablo">Get More Space...</a>*@
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 col-sm-6">
+                <div class="card card-stats">
+                    <div class="card-header card-header-rose card-header-icon">
+                        <div class="card-icon">
+                            <i class="material-icons">not_interested</i>
+                        </div>
+                        <p class="card-category">Paquetes anulados</p>
+                        <h3 class="card-title">@Model.PaquetesAnulados</h3>
+                    </div>
+                    <div class="card-footer">
+                        <div class="stats">
+                            @*<i class="material-icons">local_offer</i> Tracked from Google Analytics*@
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 col-sm-6">
+                <div class="card card-stats">
+                    <div class="card-header card-header-success card-header-icon">
+                        <div class="card-icon">
+                            <i class="material-icons">done_all</i>
+                        </div>
+                        <p class="card-category">Paquetes entregados</p>
+                        <h3 class="card-title">@Model.PaquetesEntregados</h3>
+                    </div>
+                    <div class="card-footer">
+                        <div class="stats">
+                            @*<i class="material-icons">date_range</i> Last 24 Hours*@
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 col-sm-6">
+                <div class="card card-stats">
+                    <div class="card-header card-header-info card-header-icon">
+                        <div class="card-icon">
+                            <i class="material-icons">people</i>
+                        </div>
+                        <p class="card-category">Cantidad de Clientes</p>
+                        <h3 class="card-title">@Model.CantidadClientes</h3>
+                    </div>
+                    <div class="card-footer">
+                        @*<div class="stats">
+                            <i class="material-icons">update</i> Just Updated
+                        </div>*@
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card card-chart">
+                    <div class="card-header card-header-info">
+                        <div id="simpleBarChart" class="ct-chart"></div>
+                    </div>
+                    <div class="card-body">
+                        <h4 class="card-title ">Paquetes ingresados los últimos 6 meses</h4>
+                        <p class="card-category">Gráfica de barras</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<input type="hidden" value="@Url.Action("GetGraficaPaquetesPasados","Administracion")" id="urlGetGraficaPaquetesPasados"/>
+
+@section scripts
+{
+    
+    <script>
+        $(document).ready(function () {
+
+            //Ir a pedir la data
+            var urlGetGraficaPaquetesPasados = $("#urlGetGraficaPaquetesPasados").val();
+
+            $.ajax({
+                type: 'POST',
+                data: { cantidadMesesAtras : 6},
+                url: urlGetGraficaPaquetesPasados,
+                success: function (data) {
+                    var labels = [];
+                    var series = [];
+                    for (var i = 0; i < data.data.length; i++) {
+                        labels.push(data.data[i].texto);
+                        series.push(data.data[i].valor);
+                    }
+
+                    var dataSimpleBarChart = {
+                        labels: labels,
+                        series: [series] 
+                    };
+
+                    console.log(dataSimpleBarChart);
+                    var optionsSimpleBarChart = {
+                        seriesBarDistance: 10,
+                        axisX: {
+                            showGrid: false
+                        }
+                    };
+
+                    var responsiveOptionsSimpleBarChart = [
+                        ['screen and (max-width: 640px)', {
+                            seriesBarDistance: 5,
+                            axisX: {
+                                labelInterpolationFnc: function(value) {
+                                    return value[0];
+                                }
+                            }
+                        }]
+                    ];
+
+                    var simpleBarChart = Chartist.Bar('#simpleBarChart', dataSimpleBarChart, optionsSimpleBarChart, responsiveOptionsSimpleBarChart);
+
+                    //start animation for the Emails Subscription Chart
+                    md.startAnimationForBarChart(simpleBarChart);
+
+                    //console.log(data);
+                },
+                error: function(e) {
+                    console.log(e);
+                }
+            });
+            
+        });
+    </script>
+}

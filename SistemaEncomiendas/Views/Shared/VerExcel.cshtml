@@ -1,0 +1,57 @@
+﻿@using SistemaEncomiendas.Core.Models
+@model VerExcelVm
+@{
+    ViewData["Title"] = "VerExcel";
+
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-8 offset-2">
+            <div class="card ">
+                <div class="card-header card-header-rose card-header-icon">
+                    <div class="card-icon">
+                        <i class="material-icons">description</i>
+                    </div>
+                    <h4 class="card-title">Datos de envio</h4>
+                </div>
+                <div class="card-body">
+                    @if (Model.MultimediaUsuarios.Any())
+                    {
+                        <div class="row">
+                            <label class="col-sm-2 col-form-label">Archivo excel</label>
+                            <br/>
+                            <div class="col-lg-5 col-md-6 col-sm-3">
+                                <a href="@(Model.BaseUrl + Model.MultimediaUsuarios.First(x => x.TipoArchivo == TipoArchivo.Excel).NombreArchivo)">Archivo excel</a>
+                            </div>
+                        </div>
+                        <br />
+                        if (Model.MultimediaUsuarios.Any(x => x.TipoArchivo == TipoArchivo.Imagen))
+                         {
+                             <br />
+                             <div class="row">
+                                 <label class="col-sm-2 col-form-label">Imagenes</label>
+                                 <br/>
+                                 <div class="col-lg-5 col-md-6 col-sm-3">
+                                     @foreach (var item in Model.MultimediaUsuarios.Where(x => x.TipoArchivo == TipoArchivo.Imagen))
+                                     {
+                                         <div class="row">
+                                             <img src="@(Model.BaseUrl+ item.NombreArchivo)" />
+                                         </div>
+                                     }
+                                 </div>
+                             </div>
+                         }
+                    }
+                    else
+                    {
+                        <p>Aun no se cargan archivos para ti. Espera a que el administrador suba los datos</p>
+                    }
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+

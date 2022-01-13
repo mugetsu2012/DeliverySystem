@@ -1,0 +1,193 @@
+﻿@using System.Linq
+@model CrearEditarPaqueteVm
+
+@{
+    ViewData["Title"] = "Crear/EditarPaquete";
+}
+
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-8 offset-2">
+            <div class="card ">
+                <div class="card-header card-header-rose card-header-icon">
+                    <div class="card-icon">
+                        <i class="material-icons">local_mall</i>
+                    </div>
+                    <h4 class="card-title">Crear/Editar Paquete</h4>
+                    
+                    <div class="row">
+                        <div class="offset-8 col-md-6">
+                            <button type="button" class="btn btn-fill btn-success" onclick="location.href='@Url.Action("CrearEditarPaquete")'">Crear nuevo</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form asp-controller="Administracion" asp-action="GuardarPaquete" method="post" class="form-horizontal" id="frmCrearPaquete">
+                        <div class="row">
+                            <label class="col-sm-2 col-form-label">Usuario Envia</label>
+                            <div class="col-lg-5 col-md-6 col-sm-3">
+                                <select asp-for="CrearEditarPaqueteDto.IdUsuarioEnvia" asp-items="Model.Vendedores.Select(x => new SelectListItem(){ Text = x.ImprimirNombreConUsuario() , Value = x.NombreUsuario})" class="selectpicker form-control" data-style="btn btn-primary btn-round" title="Usuario Envia">
+                                    <option disabled selected>Seleccione</option>
+                                </select>
+                            </div>
+                        </div>
+                        <br/>
+                        <div class="row">
+                            <label class="col-sm-2 col-form-label">Usuario Recibe</label>
+                            <div class="col-lg-5 col-md-6 col-sm-3">
+                                <select asp-for="CrearEditarPaqueteDto.IdUsuarioRecibe" asp-items="Model.Clientes.Select(x => new SelectListItem(){ Text = x.ImprimirNombreConUsuario(), Value = x.NombreUsuario})" class="selectpicker form-control" data-style="btn btn-primary btn-round" title="Usuario Envia">
+                                    <option disabled selected>Seleccione</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="col-sm-2 col-form-label">Precio</label>
+                            <div class="col-sm-8">
+                                <div class="form-group">
+                                    <input asp-for="CrearEditarPaqueteDto.Precio" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="col-sm-2 col-form-label">Lugar de entrega</label>
+                            <div class="col-sm-8">
+                                <div class="form-group">
+                                    <input asp-for="CrearEditarPaqueteDto.LugarEntrega" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="col-sm-2 col-form-label">Fecha de entrega</label>
+                            <div class="col-sm-8">
+                                <div class="form-group">
+                                    <input asp-for="CrearEditarPaqueteDto.FechaEntregaTexto" type="text" class="form-control datepicker">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="col-sm-2 col-form-label">Comentario</label>
+                            <div class="col-sm-8">
+                                <div class="form-group">
+                                    <textarea asp-for="CrearEditarPaqueteDto.Comentario" cols="4" rows="5" class="form-control"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" asp-for="CrearEditarPaqueteDto.Codigo" />
+                    </form>
+                </div>
+                <div class="card-footer ">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <button type="button" class="btn btn-fill btn-info" onclick="location.href='@Url.Action("Paquetes")'">Cancelar</button>
+                        </div>
+                        <div class="col-md-6">
+                            <button type="submit" class="btn btn-fill btn-rose" id="btnGuardarPaquete">Guardar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div style="visibility: hidden">
+    <ul id="listaErrores"></ul>
+</div>
+
+@section scripts
+    {
+    <script>
+        $(document).ready(function() {
+            $('.datepicker').datetimepicker({
+                format: "DD/MM/YYYY",
+                icons: {
+                    time: "fa fa-clock-o",
+                    date: "fa fa-calendar",
+                    up: "fa fa-chevron-up",
+                    down: "fa fa-chevron-down",
+                    previous: 'fa fa-chevron-left',
+                    next: 'fa fa-chevron-right',
+                    today: 'fa fa-screenshot',
+                    clear: 'fa fa-trash',
+                    close: 'fa fa-remove'
+                }
+            });
+
+            
+            $('#btnGuardarPaquete').on('click', function (e) {
+
+                var $form = $("#frmCrearPaquete");
+
+                var data = $form.serialize();
+
+                var url = $form.attr('action');
+
+                $.ajax({
+                    type: 'POST',
+                    data: data,
+                    url: url,
+                    success: function (data) {
+                        if (data.exito) {
+                            swal({
+                                title: 'Éxito!',
+                                buttonsStyling: false,
+                                confirmButtonClass: "btn btn-success",
+                                type: "success",
+                                text: "El paquete se ha guardado correctamente"
+                            }).then(function() {
+                                location.href = data.newUrl;
+                            }).catch(swal.noop);
+                        } else {
+
+                            //Leemos la lista de errores
+                            var $listaErrores = $("#listaErrores");
+
+                            $.each(data.errores,
+                                function(index, value) {
+                                    $listaErrores.append('<li>' + value + '</li>');
+                                });
+
+                            var htmlError = $listaErrores.html();
+
+                            swal({
+                                title: 'Espera',
+                                type: 'warning',
+                                buttonsStyling: false,
+                                confirmButtonClass: "btn btn-success",
+                                html: 'Revisa los siguientes errores: <br />' +
+                                    htmlError
+                            }).catch(swal.noop);
+
+                            //Limpiamos los errores
+                            $listaErrores.html('');
+                        }
+
+                    },
+                    error: function (e) {
+                        console.log(e);
+                        swal({
+                            title: "Uh Oh!",
+                            text:
+                                "Al parecer ocurrió un error, intenta recargando la página, si el problema persiste, consulta al administrador",
+                            buttonsStyling: false,
+                            confirmButtonClass: "btn btn-danger",
+                            type: "error"
+                        }).catch(swal.noop);
+                    }
+                });
+            });
+            //swal({
+            //    title: 'HTML example',
+            //    buttonsStyling: false,
+            //    confirmButtonClass: "btn btn-success",
+            //    html: 'You can use <b>bold text</b>, ' +
+            //        '<a href="http://github.com">links</a> ' +
+            //        'and other HTML tags'
+            //}).catch(swal.noop)
+
+        });
+    </script>
+}
+
+

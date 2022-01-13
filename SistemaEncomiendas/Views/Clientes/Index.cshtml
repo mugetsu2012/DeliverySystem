@@ -1,0 +1,178 @@
+﻿@using System.Globalization
+@using SistemaEncomiendas.Core.Models
+@model SistemaEncomiendas.Models.ListaPaquetesUsuarioVm
+@{
+    ViewData["Title"] = "Listado Paquetes";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card ">
+                <div class="card-header card-header-rose card-header-icon">
+                    <div class="card-icon">
+                        <i class="material-icons">search</i>
+                    </div>
+                    <h4 class="card-title">Búsqueda</h4>
+                </div>
+                <div class="card-body ">
+                    <form method="get" id="frmBuscarPaquetes" asp-controller="Clientes" asp-action="Index" class="form-horizontal">
+                        <div class="row">
+                            <label class="col-sm-2 col-form-label">Lugar de entrega</label>
+                            <div class="col-sm-3">
+                                <div class="form-group">
+                                    <input type="text" asp-for="LugarEntrega" class="form-control">
+                                </div>
+                            </div>
+                            <label class="col-sm-2 col-form-label">Estado</label>
+                            <div class="col-sm-3">
+                                <div class="form-group">
+                                    <select asp-for="EstadoPaquete" asp-items="Html.GetEnumSelectList<EstadoPaquete>()" class="selectpicker" data-style="btn btn-primary btn-round" title="Single Select">
+                                        <option selected>TODOS</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <label class="col-sm-2 col-form-label">Fecha inicio entrega</label>
+                            <div class="col-sm-3">
+                                <div class="form-group">
+                                    <input type="text" asp-for="FechaInicioEntrega" class="form-control datepicker">
+                                </div>
+                            </div>
+                            <label class="col-sm-2 col-form-label">Fecha fin entrega</label>
+                            <div class="col-sm-3">
+                                <div class="form-group">
+                                    <input type="text" asp-for="FechaFinEntrega" class="form-control datepicker">
+                                </div>
+                            </div>
+                        </div>
+
+
+                    </form>
+                </div>
+                <div class="card-footer ">
+                    <div class="row">
+                        <div class="col-md-9">
+                            <button type="submit" class="btn btn-fill btn-rose" id="btnBuscarPaquetes">Buscar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header card-header-rose card-header-icon">
+                    <div class="card-icon">
+                        <i class="material-icons">local_mall</i>
+                    </div>
+                    <h4 class="card-title">Mis compras</h4>
+                </div>
+                <div class="card-body">
+                    <button class="btn btn-primary btn-round" onclick="location.href = '@Url.Action("GenerarReporte", "Clientes", new {FechaInicioEntrega = Model.FechaInicioEntrega, FechaFinEntrega = Model.FechaFinEntrega, LugarEntrega = Model.LugarEntrega, EstadoPaquete = Model.EstadoPaquete,})'">
+                        <i class="material-icons">assignment</i> Exportar a PDF
+                    </button>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th>Precio</th>
+                                <th>Envia</th>
+                                <th>Lugar entrega</th>
+                                <th>Fecha de entrega</th>
+                                @*<th>Fecha entrega real</th>*@
+                                <th>Fecha de anulacion</th>
+                                <th>Estado</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+
+                            @foreach (var paquete in Model.Paquetes)
+                            {
+                                <tr>
+                                    <td>$@paquete.Precio.ToString("##.00")</td>
+                                    <td>@paquete.UsuarioEnvia.ImprimirNombreCompleto()</td>
+                                    <td>@paquete.LugarEntrega</td>
+                                    <td>@paquete.FechaEntrega.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture)</td>
+                                    @*<td>
+                                        @if (paquete.FechaPaqueteEntregado == null)
+                                        {
+                                            @:N/A
+                                        }
+                                        else
+                                        {
+                                            @Html.Raw(paquete.FechaPaqueteEntregado.Value.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture))
+                                        }
+                                    </td>*@
+                                    <td>
+                                        @if (paquete.FechaPaqueteAnulado == null)
+                                        {
+                                            @:N/A
+                                        }
+                                        else
+                                        {
+                                            @Html.Raw(paquete.FechaPaqueteAnulado.Value.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture))
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (paquete.EstadoPaquete == EstadoPaquete.Entregado)
+                                        {
+                                            @:Entregado
+                                        }
+                                        else if (paquete.EstadoPaquete == EstadoPaquete.Anulado)
+                                        {
+                                            @:Anulado
+                                        }
+                                        else if (paquete.EstadoPaquete == EstadoPaquete.Pendiente)
+                                        {
+                                            @:Pendiente
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div style="visibility: hidden">
+    <ul id="listaErrores"></ul>
+</div>
+
+@section scripts
+    {
+    <script>
+        $(document).ready(function () {
+
+            $('.datepicker').datetimepicker({
+                format: "DD/MM/YYYY",
+                icons: {
+                    time: "fa fa-clock-o",
+                    date: "fa fa-calendar",
+                    up: "fa fa-chevron-up",
+                    down: "fa fa-chevron-down",
+                    previous: 'fa fa-chevron-left',
+                    next: 'fa fa-chevron-right',
+                    today: 'fa fa-screenshot',
+                    clear: 'fa fa-trash',
+                    close: 'fa fa-remove'
+                }
+            });
+
+
+            $("#btnBuscarPaquetes").on('click', function(e) {
+                e.preventDefault();
+                $(this).prop('disable', true);
+                $("#frmBuscarPaquetes").submit();
+            });
+        });
+    </script>
+}

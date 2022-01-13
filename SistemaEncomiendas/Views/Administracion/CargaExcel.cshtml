@@ -1,0 +1,118 @@
+﻿@model AsignarExcelUsuarioVm
+@{
+    ViewData["Title"] = "CargaExcel";
+    bool exito = ViewBag.exito != null;
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-8 offset-2">
+            <div class="card ">
+                <div class="card-header card-header-rose card-header-icon">
+                    <div class="card-icon">
+                        <i class="material-icons">description</i>
+                    </div>
+                    <h4 class="card-title">Carga de excel</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-controller="Administracion" asp-action="GuardarExcelUsuario" method="post" class="form-horizontal" id="frmGuardarExcelUsuario" enctype="multipart/form-data">
+                        <div class="row">
+                            <label class="col-sm-2 col-form-label">Usuario</label>
+                            <div class="col-lg-5 col-md-6 col-sm-3">
+                                <select asp-for="IdUsuario" asp-items="Model.Usuarios.Select(x => new SelectListItem(){ Text = x.ImprimirNombreCompletoConUsuarioYTipo() , Value = x.NombreUsuario})" class="selectpicker form-control" data-style="btn btn-primary btn-round" title="Usuario">
+                                    <option disabled selected>Seleccione</option>
+                                </select>
+                            </div>
+                        </div>
+                        <br />
+                        <div class="row">
+                            <label class="col-sm-2 col-form-label">Archivo Excel</label>
+                            <div class="col-lg-5 col-md-6 col-sm-3">
+                                <input asp-for="Archivo" type="file" />
+                            </div>
+                        </div>
+                        <br />
+                        <div class="row">
+                            <label class="col-sm-2 col-form-label">Imagenes</label>
+                            <div class="col-lg-5 col-md-6 col-sm-3">
+                                <input asp-for="Imagenes" type="file" multiple="multiple"/>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer ">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <button type="button" class="btn btn-fill btn-info" onclick="location.href='@Url.Action("Paquetes")'">Cancelar</button>
+                        </div>
+                        <div class="col-md-6">
+                            <button type="submit" class="btn btn-fill btn-rose" id="btnCargarExcel">Guardar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (ViewBag.errores != null)
+{
+    <div style="visibility: hidden">
+        <ul id="listaErrores">
+            @foreach (string error in ViewBag.errores)
+            {
+                <li>@error</li>
+            }
+        </ul>
+    </div>
+}
+
+@if (exito)
+{
+    <input type="hidden" id="exito"/>
+}
+
+
+@section scripts
+{
+    <script>
+        $(document).ready(function() {
+
+            //Leemos la lista de errores
+            var $listaErrores = $("#listaErrores");
+
+            if ($listaErrores.length !== 0) {
+                var htmlError = $listaErrores.html();
+
+                swal({
+                    title: 'Espera',
+                    type: 'warning',
+                    buttonsStyling: false,
+                    confirmButtonClass: "btn btn-success",
+                    html: 'Revisa los siguientes errores: <br />' +
+                        htmlError
+                }).catch(swal.noop);
+            }
+
+            var exito = $("#exito");
+
+            if (exito.length !== 0) {
+                swal({
+                    title: 'Éxito!',
+                    buttonsStyling: false,
+                    confirmButtonClass: "btn btn-success",
+                    type: "success",
+                    text: "El excel se ha guardado correctamente"
+                });
+            }
+
+            
+
+            $("#btnCargarExcel").on("click", function(e) {
+                e.preventDefault();
+                $("#frmGuardarExcelUsuario").submit();
+            });
+        });
+    </script>
+}
+

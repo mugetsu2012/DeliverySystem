@@ -1,0 +1,408 @@
+﻿@using System.Globalization
+@using SistemaEncomiendas.Core.Models
+@model SistemaEncomiendas.Models.ListaPaquetesVm
+@{
+    ViewData["Title"] = "Paquetes";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card ">
+                <div class="card-header card-header-rose card-header-icon">
+                    <div class="card-icon">
+                        <i class="material-icons">search</i>
+                    </div>
+                    <h4 class="card-title">Búsqueda</h4>
+                </div>
+                <div class="card-body ">
+                    <form method="get" id="frmBuscarPaquetes" asp-controller="Administracion" asp-action="Paquetes" class="form-horizontal">
+                        <div class="row">
+                            <label class="col-sm-2 col-form-label">Lugar de entrega</label>
+                            <div class="col-sm-3">
+                                <div class="form-group">
+                                    <input type="text" asp-for="LugarEntrega" class="form-control">
+                                </div>
+                            </div>
+                            <label class="col-sm-2 col-form-label">Estado</label>
+                            <div class="col-sm-3">
+                                <div class="form-group">
+                                    <select asp-for="EstadoPaquete" asp-items="Html.GetEnumSelectList<EstadoPaquete>()" class="selectpicker" data-style="btn btn-primary btn-round" title="Single Select">
+                                        <option selected>TODOS</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <label class="col-sm-2 col-form-label">Fecha inicio entrega</label>
+                            <div class="col-sm-3">
+                                <div class="form-group">
+                                    <input type="text" asp-for="FechaInicioEntrega" class="form-control datepicker">
+                                </div>
+                            </div>
+                            <label class="col-sm-2 col-form-label">Fecha fin entrega</label>
+                            <div class="col-sm-3">
+                                <div class="form-group">
+                                    <input type="text" asp-for="FechaFinEntrega" class="form-control datepicker">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        
+                    </form>
+                </div>
+                <div class="card-footer ">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <button type="submit" class="btn btn-fill btn-rose" id="btnBuscarPaquetes">Buscar</button>
+                        </div>
+                        <div class="col-md-6">
+                            <button type="button" class="btn btn-fill btn-info" id="btnBuscarHoy" onclick="location.href= '@Url.Action("Paquetes")'">Busar hoy</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header card-header-rose card-header-icon">
+                    <div class="card-icon">
+                        <i class="material-icons">local_mall</i>
+                    </div>
+                    <h4 class="card-title">Paquetes</h4>
+                </div>
+                <div class="card-body">
+                    <button class="btn btn-primary btn-round" onclick="location.href = '@Url.Action("CrearEditarPaquete","Administracion")'">
+                        <i class="material-icons">add</i> Nuevo paquete
+                    </button>
+                    <button class="btn btn-primary btn-round" onclick="location.href = '@Url.Action("GenerarReporte", "Administracion", new {FechaInicioEntrega = Model.FechaInicioEntrega, FechaFinEntrega = Model.FechaFinEntrega, LugarEntrega = Model.LugarEntrega, EstadoPaquete = Model.EstadoPaquete})'">
+                        <i class="material-icons">assignment</i> Exportar a PDF
+                    </button>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Usuario envia</th>
+                                    <th>Usuario recibe</th>
+                                    <th>Precio</th>
+                                    <th>Lugar entrega</th>
+                                    <th>Fecha de entrega</th>
+                                    <th>Comentario</th>
+                                    <th>Estado</th>
+                                    <th class="text-right">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+
+                                @foreach (var paquete in Model.Paquetes)
+                                {
+                                <tr>
+                                    <td>@paquete.UsuarioEnvia.ImprimirNombreConUsuario()</td>
+                                    <td>@paquete.UsuarioRecibe.ImprimirNombreConUsuario()</td>
+                                    <td>$@paquete.Precio.ToString("##.00")</td>
+                                    <td>@paquete.LugarEntrega</td>
+                                    <td>@paquete.FechaEntrega.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture)</td>
+                                    <td>@paquete.Comentario</td>
+                                    <td>
+                                        @if (paquete.EstadoPaquete == EstadoPaquete.Entregado)
+                                        {
+                                            @:Entregado
+                                        }
+                                        else if (paquete.EstadoPaquete == EstadoPaquete.Anulado)
+                                        {
+                                            @:Anulado
+                                        }
+                                        else if (paquete.EstadoPaquete == EstadoPaquete.Pendiente)
+                                        {
+                                            @:Pendiente
+                                        }
+                                    </td>
+                                    <td class="td-actions text-right">
+                                        @if (paquete.EstadoPaquete == EstadoPaquete.Pendiente)
+                                        {
+                                            <button type="button" rel="tooltip" title="Editar" class="btn btn-info btnEditarPaquete" onclick="location.href = '@Url.Action("CrearEditarPaquete", "Administracion", new {codigoPaquete = paquete.Codigo})'">
+                                                <i class="material-icons">edit</i>
+                                            </button>
+
+                                            <button type="button" rel="tooltip" title="Anular" class="btn btn-danger btnAnularPaquete" data-codigo="@paquete.Codigo">
+                                                <i class="material-icons">close</i>
+                                            </button>
+                                            <button type="button" rel="tooltip" title="Marcar Entregado" class="btn btn-success btnMarcarEntregado" data-codigo="@paquete.Codigo">
+                                                <i class="material-icons">check_circle</i>
+                                            </button>
+                                        }
+
+
+                                    </td>
+                                </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalMarcarEntregado" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Marcar paquete entregado</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                    <i class="material-icons">clear</i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>
+                    A continuación indica la fecha en la que este paquete se entregó: 
+                </p>
+                <div class="form-group bmd-form-group is-filled">
+                    <label class="label-control">Fecha</label>
+                    <input type="text" class="form-control datepicker" id="txtFechaEntrega" value="@DateTime.Now.ToString("d/M/yyyy", CultureInfo.InvariantCulture)">
+                    <span class="material-input"></span>
+                    <span class="material-input"></span>
+                    <input type="hidden" id="txtPaqueteActualEntregar"/>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="btnMarcarEntrega">Completar</button>
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<input type="hidden" id="urlAnularPaquete" value="@Url.Action("MarcarPaqueteAnulado","Administracion")" />
+<input type="hidden" id="urlMarcarEntregado" value="@Url.Action("MarcarPaqueteEntregado","Administracion")" />
+
+<div style="visibility: hidden">
+    <ul id="listaErrores"></ul>
+</div>
+
+@section scripts
+    {
+    <script>
+        $(document).ready(function () {
+
+            $('.datepicker').datetimepicker({
+                format: "DD/MM/YYYY",
+                icons: {
+                    time: "fa fa-clock-o",
+                    date: "fa fa-calendar",
+                    up: "fa fa-chevron-up",
+                    down: "fa fa-chevron-down",
+                    previous: 'fa fa-chevron-left',
+                    next: 'fa fa-chevron-right',
+                    today: 'fa fa-screenshot',
+                    clear: 'fa fa-trash',
+                    close: 'fa fa-remove'
+                }
+            });
+
+
+            $("#btnBuscarPaquetes").on('click', function(e) {
+                e.preventDefault();
+                $(this).prop('disable', true);
+                $("#frmBuscarPaquetes").submit();
+            });
+
+            $(".btnEditarUsuario").on('click', function(e) {
+                e.preventDefault();
+
+                var url = $(this).data('url');
+
+                location.href = url;
+
+            });
+
+            $('.btnAccionEstadoUsuario').on('click',
+                function(e) {
+                    e.preventDefault();
+
+                    var usuario = $(this).data('usuario');
+
+                    var url = $("#urlToggleUser").val();
+
+                    $.ajax({
+                        type: 'POST',
+                        data: { usuario: usuario },
+                        url: url,
+                        success: function(data) {
+                            swal({
+                                title: 'Éxito!',
+                                buttonsStyling: false,
+                                confirmButtonClass: "btn btn-success",
+                                type: "success",
+                                text: "El estado se ha modificado correctamente"
+                            }).then(function() {
+                                location.reload();
+                            }).catch(swal.noop);
+                        },
+                        error: function(e) {
+                            console.log(e);
+                            swal({
+                                title: "Uh Oh!",
+                                text:
+                                    "Al parecer ocurrió un error, intenta recargando la página, si el problema persiste, consulta al administrador",
+                                buttonsStyling: false,
+                                confirmButtonClass: "btn btn-danger",
+                                type: "error"
+                            }).catch(swal.noop);
+                        }
+                    })
+                });
+
+            $('.btnMarcarEntregado').on('click', function (e) {
+
+                var codigo = $(this).data('codigo');
+                $("#txtPaqueteActualEntregar").val(codigo);
+
+                $("#modalMarcarEntregado").modal('show');
+            });
+
+            $('#btnMarcarEntrega').on('click',
+                function(e) {
+                    e.preventDefault();
+                    var codigoPaquete = $("#txtPaqueteActualEntregar").val();
+                    var fechaEntrega = $("#txtFechaEntrega").val();
+                    var url = $("#urlMarcarEntregado").val();
+
+                    $.ajax({
+                        type: 'POST',
+                        url: url,
+                        data: { idPaquete: codigoPaquete, fecha: fechaEntrega },
+                        success: function(data) {
+                            if (data.exito) {
+                                swal({
+                                    title: 'Éxito!',
+                                    buttonsStyling: false,
+                                    confirmButtonClass: "btn btn-success",
+                                    type: "success",
+                                    text: "La fecha de entrega se guardo correctamente"
+                                }).then(function() {
+                                    location.reload();
+                                }).catch(swal.noop);
+                            } else {
+
+                                //Leemos la lista de errores
+                                var $listaErrores = $("#listaErrores");
+
+                                $.each(data.errores,
+                                    function(index, value) {
+                                        $listaErrores.append('<li>' + value + '</li>');
+                                    });
+
+                                var htmlError = $listaErrores.html();
+
+                                swal({
+                                    title: 'Espera',
+                                    type: 'warning',
+                                    buttonsStyling: false,
+                                    confirmButtonClass: "btn btn-success",
+                                    html: 'Revisa los siguientes errores: <br />' +
+                                        htmlError
+                                }).catch(swal.noop);
+
+                                //Limpiamos los errores
+                                $listaErrores.html('');
+                            }
+                        },
+                        error: function(e) {
+
+                            console.log(e);
+                            swal({
+                                title: "Uh Oh!",
+                                text:
+                                    "Al parecer ocurrió un error, intenta recargando la página, si el problema persiste, consulta al administrador",
+                                buttonsStyling: false,
+                                confirmButtonClass: "btn btn-danger",
+                                type: "error"
+                            }).catch(swal.noop);
+                        }
+                    });
+
+                });
+
+            $('.btnAnularPaquete').on('click',
+                function(e) {
+                    e.preventDefault();
+
+                    var codigo = $(this).data('codigo');
+
+                    var url = $("#urlAnularPaquete").val();
+
+                    swal({
+                        title: '¿Está seguro?',
+                        text: "La anulación de un paquete es irreversible",
+                        type: 'warning',
+                        showCancelButton: true,
+                        confirmButtonClass: 'btn btn-success',
+                        cancelButtonClass: 'btn btn-danger',
+                        confirmButtonText: 'Sí, anulalo!',
+                        cancelButtonText: 'No, cancelar!',
+                        buttonsStyling: false
+                    }).then(function() {
+                        //Como dijo que si, entonce mando a anular el paquete
+
+                        $.ajax({
+                            type: 'POST',
+                            url: url,
+                            data: { idPaquete: codigo },
+                            success: function(data) {
+                                if (data.exito) {
+                                    swal({
+                                        title: 'Éxito!',
+                                        buttonsStyling: false,
+                                        confirmButtonClass: "btn btn-success",
+                                        type: "success",
+                                        text: "El paquete se anuló correctamente"
+                                    }).then(function() {
+                                        location.reload();
+                                    }).catch(swal.noop);
+                                } else {
+
+                                    //Leemos la lista de errores
+                                    var $listaErrores = $("#listaErrores");
+
+                                    $.each(data.errores,
+                                        function(index, value) {
+                                            $listaErrores.append('<li>' + value + '</li>');
+                                        });
+
+                                    var htmlError = $listaErrores.html();
+
+                                    swal({
+                                        title: 'Espera',
+                                        type: 'warning',
+                                        buttonsStyling: false,
+                                        confirmButtonClass: "btn btn-success",
+                                        html: 'Revisa los siguientes errores: <br />' +
+                                            htmlError
+                                    }).catch(swal.noop);
+
+                                    //Limpiamos los errores
+                                    $listaErrores.html('');
+                                }
+                            },
+                            error: function(e) {
+                                console.log(e);
+                                swal({
+                                    title: "Uh Oh!",
+                                    text:
+                                        "Al parecer ocurrió un error, intenta recargando la página, si el problema persiste, consulta al administrador",
+                                    buttonsStyling: false,
+                                    confirmButtonClass: "btn btn-danger",
+                                    type: "error"
+                                }).catch(swal.noop);
+                            }
+                        });
+                    });
+                });
+        });
+    </script>
+}
